@@ -2,8 +2,7 @@ const jwt = require("jsonwebtoken");
 const userRep = require("../repositories/userRepo");
 const bcrypt = require("bcrypt");
 const userObj = new userRep();
-const dotenv = require("dotenv");
-dotenv.config();
+
 async function signup(data) {
   const res = await userObj.post(data);
   return res;
@@ -29,7 +28,25 @@ async function signin(data) {
         expiresIn: 86400,
       }
     );
+
     return token;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function isAuthenticated(token) {
+  try {
+    if (!token) {
+      throw new Error("user not found");
+    }
+    const response = jwt.verify(token, process.env.API_SECRET);
+
+    const user = await userObj.getUserByEmail(response.email);
+    if (!user) {
+      throw new Error("no user found");
+    }
+    return user;
   } catch (error) {
     console.log(error);
   }
@@ -38,4 +55,5 @@ async function signin(data) {
 module.exports = {
   signin,
   signup,
+  isAuthenticated,
 };
